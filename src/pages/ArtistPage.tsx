@@ -10,6 +10,7 @@ export function ArtistPage() {
   const [artist, setArtist] = useState<ArtistDetail | null>(null);
   const [state, setState] = useState<LoadState>("loading");
   const [albumsState, setAlbumsState] = useState<AlbumsLoadState>("idle");
+  const [tracksLoadedFor, setTracksLoadedFor] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!artistId) return;
@@ -27,10 +28,30 @@ export function ArtistPage() {
     if (!artist) return;
     setAlbumsState("loading");
     api
-      .ingestArtist(artist.name)
+      .loadAlbums(artist.id)
       .then((updated) => {
         setArtist(updated);
         setAlbumsState("idle");
+
+        // Album titles are already in `updated` and shown immediately. Each
+        // album's tracklist is a separate, slower MusicBrainz call - fetch them
+        // in the background so the page doesn't block on all of them upfront.
+        updated.albums.forEach((album) => {
+          api
+            .loadTracks(album.id)
+            .then((withTracks) => {
+              setArtist((prev) => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  albums: prev.albums.map((a) => (a.id === withTracks.id ? withTracks : a)),
+                };
+              });
+            })
+            .finally(() => {
+              setTracksLoadedFor((prev) => new Set(prev).add(album.id));
+            });
+        });
       })
       .catch(() => setAlbumsState("error"));
   }
@@ -102,11 +123,17 @@ export function ArtistPage() {
                   </span>
                 )}
               </h2>
-              <ol className="tracklist">
-                {album.tracks.map((track) => (
-                  <li key={track.id}>{track.title}</li>
-                ))}
-              </ol>
+              {album.tracks.length > 0 ? (
+                <ol className="tracklist">
+                  {album.tracks.map((track) => (
+                    <li key={track.id}>{track.title}</li>
+                  ))}
+                </ol>
+              ) : tracksLoadedFor.has(album.id) ? (
+                <p className="feedback">No tracklist found for this album.</p>
+              ) : (
+                <p className="feedback">Loading tracklist...</p>
+              )}
             </div>
           ))}
         </div>

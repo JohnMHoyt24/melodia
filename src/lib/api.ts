@@ -58,12 +58,12 @@ export const api = {
   search: (q: string) =>
     request<ArtistSearchResult[]>(`/search?q=${encodeURIComponent(q)}`),
   getArtist: (id: string) => request<ArtistDetail>(`/artists/${id}`),
-  ingestArtist: (name: string, albumLimit = 10) =>
-    request<ArtistDetail>("/artists/ingest", {
+  loadAlbums: (artistId: string, limit = 10) =>
+    request<ArtistDetail>(`/artists/${artistId}/albums?limit=${limit}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, album_limit: albumLimit }),
     }),
+  loadTracks: (albumId: string) =>
+    request<Album>(`/albums/${albumId}/tracks`, { method: "POST" }),
   recommend: (prompt: string, count = 5) =>
     request<RecommendedArtist[]>("/recommend", {
       method: "POST",

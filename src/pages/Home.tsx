@@ -6,7 +6,7 @@ type ApiState = "checking" | "online" | "offline";
 type RecommendState = "idle" | "loading" | "done" | "error";
 
 export function Home() {
-  const [apiState, setApiState] = useState<ApiState>("checking");
+  const [, setApiState] = useState<ApiState>("checking");
   const [prompt, setPrompt] = useState("");
   const [results, setResults] = useState<RecommendedArtist[]>([]);
   const [recommendState, setRecommendState] = useState<RecommendState>("idle");
