@@ -35,18 +35,21 @@ export function Home() {
 
   return (
     <section id="home">
-      <h1>Melodia</h1>
-      <p>AI-powered music discovery.</p>
-      <p>
-        Backend status:{" "}
-        <strong className={`api-status api-status--${apiState}`}>
-          {apiState}
-        </strong>
-      </p>
+      <div className="hero">
+        <h1>Melodia</h1>
+        <p className="tagline">AI-powered music discovery.</p>
+        <p className="status-line">
+          {/*Backend status:{" "}
+          <span className={`status-badge status-badge--${apiState}`}>
+            <span className="status-dot" aria-hidden="true" />
+            {apiState}
+          </span>*/}
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit} id="prompt-form">
+      <form onSubmit={handleSubmit} id="prompt-form" className="card">
         <textarea
-          placeholder='Enter your favorite artists, genres, or a description of what you want to hear...'
+          placeholder="Enter your favorite artists, genres, or a description of what you want to hear..."
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
           aria-label="Describe what you're looking for"
@@ -58,22 +61,34 @@ export function Home() {
       </form>
 
       {recommendState === "loading" && (
-        <p>Asking around... this can take a little while.</p>
+        <p className="feedback">Asking around... this can take a little while.</p>
       )}
       {recommendState === "error" && (
-        <p>Couldn't get recommendations. Is the backend running?</p>
+        <p className="feedback feedback--error">
+          Couldn't get recommendations. Is the backend running?
+        </p>
       )}
       {recommendState === "done" && results.length === 0 && (
-        <p>No verifiable artists came back for that one - try rephrasing.</p>
+        <p className="feedback">
+          No verifiable artists came back for that one - try rephrasing.
+        </p>
       )}
 
       {results.length > 0 && (
         <ul id="recommend-results">
           {results.map((artist) => (
-            <li key={artist.id} className="recommendation">
-              <Link to={`/artists/${artist.id}`}>{artist.name}</Link>
+            <li key={artist.id} className="recommendation card">
+              <Link to={`/artists/${artist.id}`} className="recommendation-name">
+                {artist.name}
+              </Link>
               {artist.genres.length > 0 && (
-                <span className="genres"> — {artist.genres.join(", ")}</span>
+                <div className="genre-tags">
+                  {artist.genres.map((genre) => (
+                    <span key={genre} className="genre-tag">
+                      {genre}
+                    </span>
+                  ))}
+                </div>
               )}
               <p className="reason">{artist.reason}</p>
             </li>
