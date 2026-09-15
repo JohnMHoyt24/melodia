@@ -19,7 +19,36 @@ export interface Artist {
   created_at: string;
 }
 
+export interface ArtistSearchResult {
+  id: string;
+  name: string;
+  genres: string[];
+}
+
+export interface Track {
+  id: string;
+  title: string;
+  track_number: number | null;
+  length_ms: number | null;
+}
+
+export interface Album {
+  id: string;
+  title: string;
+  primary_type: string | null;
+  first_release_date: string | null;
+  tracks: Track[];
+}
+
+export interface ArtistDetail extends Artist {
+  genres: { name: string }[];
+  albums: Album[];
+}
+
 export const api = {
   health: () => request<HealthStatus>("/health"),
   listArtists: () => request<Artist[]>("/artists"),
+  search: (q: string) =>
+    request<ArtistSearchResult[]>(`/search?q=${encodeURIComponent(q)}`),
+  getArtist: (id: string) => request<ArtistDetail>(`/artists/${id}`),
 };
