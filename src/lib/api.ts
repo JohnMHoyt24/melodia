@@ -45,10 +45,29 @@ export interface ArtistDetail extends Artist {
   albums: Album[];
 }
 
+export interface RecommendedArtist {
+  id: string;
+  name: string;
+  genres: string[];
+  reason: string;
+}
+
 export const api = {
   health: () => request<HealthStatus>("/health"),
   listArtists: () => request<Artist[]>("/artists"),
   search: (q: string) =>
     request<ArtistSearchResult[]>(`/search?q=${encodeURIComponent(q)}`),
   getArtist: (id: string) => request<ArtistDetail>(`/artists/${id}`),
+  ingestArtist: (name: string, albumLimit = 10) =>
+    request<ArtistDetail>("/artists/ingest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, album_limit: albumLimit }),
+    }),
+  recommend: (prompt: string, count = 5) =>
+    request<RecommendedArtist[]>("/recommend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt, count }),
+    }),
 };

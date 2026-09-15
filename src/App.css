@@ -18,3 +18,36 @@
 .api-status--checking {
   color: var(--text);
 }
+
+#prompt-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 480px;
+  margin: 24px auto;
+}
+
+#prompt-form textarea {
+  font: inherit;
+  padding: 8px;
+  resize: vertical;
+}
+
+#recommend-results {
+  list-style: none;
+  padding: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.recommendation {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.recommendation .reason {
+  margin: 4px 0 0;
+  color: var(--text);
+  font-size: 0.9em;
+}
