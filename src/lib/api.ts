@@ -1,3 +1,5 @@
+import { supabase } from "./supabase";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -5,7 +7,22 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     throw new Error(`${init?.method ?? "GET"} ${path} failed: ${response.status}`);
   }
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
+}
+
+async function authedRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error("Not signed in");
+
+  return request<T>(path, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      Authorization: `Bearer ${token}`,
+    },
+  });
 }
 
 export interface HealthStatus {
@@ -52,6 +69,25 @@ export interface RecommendedArtist {
   reason: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  recommended_artists: RecommendedArtist[] | null;
+  created_at: string;
+}
+
+export interface ChatThreadSummary {
+  id: string;
+  title: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatThreadDetail extends ChatThreadSummary {
+  messages: ChatMessage[];
+}
+
 export const api = {
   health: () => request<HealthStatus>("/health"),
   listArtists: () => request<Artist[]>("/artists"),
@@ -64,10 +100,21 @@ export const api = {
     }),
   loadTracks: (albumId: string) =>
     request<Album>(`/albums/${albumId}/tracks`, { method: "POST" }),
-  recommend: (prompt: string, count = 5) =>
-    request<RecommendedArtist[]>("/recommend", {
+  listThreads: () => authedRequest<ChatThreadSummary[]>("/chat/threads"),
+  createThread: (message: string) =>
+    authedRequest<ChatThreadDetail>("/chat/threads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, count }),
+      body: JSON.stringify({ message }),
     }),
+  getThread: (threadId: string) =>
+    authedRequest<ChatThreadDetail>(`/chat/threads/${threadId}`),
+  postMessage: (threadId: string, message: string) =>
+    authedRequest<ChatMessage>(`/chat/threads/${threadId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    }),
+  deleteThread: (threadId: string) =>
+    authedRequest<void>(`/chat/threads/${threadId}`, { method: "DELETE" }),
 };
