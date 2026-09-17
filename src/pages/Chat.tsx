@@ -121,7 +121,9 @@ export function Chat() {
           </div>
         )}
 
-        {threadLoadState === "loading" && <p className="feedback">Loading conversation...</p>}
+        {threadLoadState === "loading" && messages.length === 0 && (
+          <p className="feedback">Loading conversation...</p>
+        )}
         {threadLoadState === "error" && (
           <p className="feedback feedback--error">Couldn't load that conversation.</p>
         )}
