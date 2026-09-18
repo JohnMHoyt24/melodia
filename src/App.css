@@ -1,6 +1,7 @@
 #home,
 #artist,
-#auth {
+#auth,
+#profile {
   padding: 24px 24px 64px;
   max-width: 720px;
   margin: 0 auto;
@@ -115,6 +116,8 @@
   gap: 14px;
   padding: 20px;
   margin: 28px auto;
+  /* auto margins would otherwise shrink-wrap the form inside the flex column */
+  width: 100%;
   text-align: left;
 }
 
@@ -323,27 +326,134 @@
 #chat-layout {
   display: flex;
   flex: 1;
-  width: 100%;
+  /* full-bleed so the sidebar sits at the viewport's left edge */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
   min-height: 100svh;
   text-align: left;
 }
 
-#chat-sidebar {
-  width: 260px;
+.sidebar-slot {
+  width: 0;
   flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 20px 16px;
-  border-right: 1px solid var(--border);
+  transition: width var(--transition);
 
   @media (max-width: 720px) {
     display: none;
   }
 }
 
+.sidebar-slot--pinned {
+  width: 260px;
+}
+
+#chat-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 20;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 16px;
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  /* collapsed: leave a 14px strip visible as the hover target */
+  transform: translateX(calc(-100% + 14px));
+  transition: transform var(--transition), box-shadow var(--transition);
+  transition-delay: 150ms;
+}
+
+/* Collapsed-state rail: solid accent bar with a white grip so the panel is discoverable
+   without hovering. The accent is >= 3:1 against the page background in both themes. */
+#chat-sidebar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 14px;
+  background:
+    linear-gradient(#fff, #fff) center / 4px 48px no-repeat,
+    var(--accent);
+  border-radius: 0 6px 6px 0;
+  pointer-events: none;
+  transition: opacity var(--transition);
+  transition-delay: 150ms;
+}
+
+#chat-sidebar:hover::after,
+#chat-sidebar:focus-within::after,
+#chat-sidebar.pinned::after {
+  opacity: 0;
+  transition-delay: 0s;
+}
+
+#chat-sidebar > * {
+  opacity: 0;
+  transition: opacity var(--transition);
+  transition-delay: 150ms;
+}
+
+#chat-sidebar:hover,
+#chat-sidebar:focus-within,
+#chat-sidebar.pinned {
+  transform: translateX(0);
+  transition-delay: 0s;
+}
+
+#chat-sidebar:hover,
+#chat-sidebar:focus-within {
+  box-shadow: var(--shadow);
+}
+
+#chat-sidebar.pinned {
+  box-shadow: none;
+}
+
+#chat-sidebar:hover > *,
+#chat-sidebar:focus-within > *,
+#chat-sidebar.pinned > * {
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pin-button {
+  flex-shrink: 0;
+  display: inline-flex;
+  padding: 10px;
+  color: var(--text-muted);
+  background: none;
+  box-shadow: none;
+}
+
+.pin-button:hover:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.pin-button--active {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.pin-button--active svg {
+  transform: rotate(-45deg);
+}
+
 .new-chat-button {
-  width: 100%;
+  flex: 1;
+  padding-inline: 16px;
 }
 
 .thread-list {
@@ -399,27 +509,225 @@
   color: var(--status-offline);
 }
 
-.sidebar-footer {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
+/* User bar */
+
+.user-bar {
+  position: fixed;
+  top: 16px;
+  right: 24px;
+  z-index: 30;
   font-size: 0.85em;
 }
 
-.user-email {
+.user-bar-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 6px;
+  color: var(--text-h);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.user-bar-trigger:hover:not(:disabled),
+.user-bar-trigger[aria-expanded="true"] {
+  transform: none;
+  background: var(--surface-hover);
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow);
+}
+
+.user-bar-caret {
   color: var(--text-muted);
+  transition: transform var(--transition);
+}
+
+.user-bar-trigger[aria-expanded="true"] .user-bar-caret {
+  transform: rotate(180deg);
+}
+
+.user-bar-name {
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.user-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+.user-menu a,
+.user-menu button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-h);
+  background: none;
+  background-image: none;
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.user-menu a:hover,
+.user-menu button:hover:not(:disabled),
+.user-menu a:focus-visible,
+.user-menu button:focus-visible {
+  transform: none;
+  color: var(--accent);
+  background: var(--accent-bg);
+  box-shadow: none;
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar--large {
+  width: 88px;
+  height: 88px;
+  font-size: 2em;
+}
+
+.avatar--initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  background: var(--gradient);
+}
+
+/* Profile */
+
+#profile {
+  padding-top: 72px;
+  text-align: left;
+}
+
+#profile h1 {
+  margin-top: 16px;
+}
+
+#profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  margin: 28px 0;
+}
+
+#profile-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+#profile-form input,
+#profile-form textarea {
+  font: inherit;
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  transition: border-color var(--transition);
+}
+
+#profile-form textarea {
+  resize: vertical;
+}
+
+#profile-form input:disabled {
+  opacity: 0.6;
+}
+
+#profile-form input:focus-visible,
+#profile-form textarea:focus-visible {
+  border-color: var(--accent);
+}
+
+.avatar-field {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.avatar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.file-button {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  padding: 10px 22px;
+  color: #fff !important;
+  font-weight: 600;
+  background: var(--gradient);
+  border-radius: 999px;
+  box-shadow: var(--shadow-glow);
+}
+
+.file-button:focus-within {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Transparent overlay: stays keyboard-focusable and clickable */
+.file-button input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  cursor: pointer;
+}
+
+.hint {
+  flex-basis: 100%;
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+#profile-form .feedback {
+  margin: 0;
+}
+
+#profile-form button {
+  align-self: flex-start;
+}
+
+#artist {
+  padding-top: 72px;
 }
 
 #chat-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 24px 24px 32px;
+  padding: 72px 24px 32px;
   max-width: 760px;
   margin: 0 auto;
   width: 100%;

@@ -2,17 +2,18 @@ import { type FormEvent, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 
-type Mode = "sign-in" | "sign-up";
+type Mode = "sign-in" | "sign-up" | "reset";
 type SubmitState = "idle" | "loading" | "error";
 
 export function AuthPage() {
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, requestPasswordReset } = useAuth();
   const [mode, setMode] = useState<Mode>("sign-in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [error, setError] = useState<string | null>(null);
   const [signedUp, setSignedUp] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   if (user) return <Navigate to="/" replace />;
 
@@ -21,7 +22,12 @@ export function AuthPage() {
     setSubmitState("loading");
     setError(null);
 
-    const { error: authError } = mode === "sign-in" ? await signIn(email, password) : await signUp(email, password);
+    const { error: authError } =
+      mode === "reset"
+        ? await requestPasswordReset(email)
+        : mode === "sign-in"
+          ? await signIn(email, password)
+          : await signUp(email, password);
 
     if (authError) {
       setError(authError);
@@ -31,6 +37,15 @@ export function AuthPage() {
 
     setSubmitState("idle");
     if (mode === "sign-up") setSignedUp(true);
+    if (mode === "reset") setResetSent(true);
+  }
+
+  function switchMode(next: Mode) {
+    setMode(next);
+    setError(null);
+    setSignedUp(false);
+    setResetSent(false);
+    setSubmitState("idle");
   }
 
   return (
@@ -38,7 +53,9 @@ export function AuthPage() {
       <div className="hero">
         <h1>Melodia</h1>
         <p className="tagline">
-          {mode === "sign-in" ? "Sign in to continue your conversations." : "Create an account to save your chats."}
+          {mode === "sign-in" && "Sign in to continue your conversations."}
+          {mode === "sign-up" && "Create an account to save your chats."}
+          {mode === "reset" && "Enter your email and we'll send you a link to reset your password."}
         </p>
       </div>
 
@@ -53,6 +70,7 @@ export function AuthPage() {
             onChange={(event) => setEmail(event.target.value)}
           />
         </label>
+        {mode !== "reset" && (
         <label>
           Password
           <input
@@ -64,8 +82,15 @@ export function AuthPage() {
             onChange={(event) => setPassword(event.target.value)}
           />
         </label>
+        )}
         <button type="submit" disabled={submitState === "loading"}>
-          {submitState === "loading" ? "Please wait..." : mode === "sign-in" ? "Sign in" : "Sign up"}
+          {submitState === "loading"
+            ? "Please wait..."
+            : mode === "sign-in"
+              ? "Sign in"
+              : mode === "sign-up"
+                ? "Sign up"
+                : "Send reset link"}
         </button>
       </form>
 
@@ -74,16 +99,26 @@ export function AuthPage() {
         <p className="feedback">Account created - check your email to confirm, then sign in.</p>
       )}
 
+      {resetSent && (
+        <p className="feedback">
+          If an account exists for that email, a reset link is on its way. Check your inbox.
+        </p>
+      )}
+
+      {mode === "sign-in" && (
+        <p className="feedback">
+          <button type="button" className="link-button" onClick={() => switchMode("reset")}>
+            Forgot your password?
+          </button>
+        </p>
+      )}
+
       <p className="feedback">
-        {mode === "sign-in" ? "New here? " : "Already have an account? "}
+        {mode === "sign-up" ? "Already have an account? " : mode === "reset" ? "Remembered it? " : "New here? "}
         <button
           type="button"
           className="link-button"
-          onClick={() => {
-            setMode(mode === "sign-in" ? "sign-up" : "sign-in");
-            setError(null);
-            setSignedUp(false);
-          }}
+          onClick={() => switchMode(mode === "sign-in" ? "sign-up" : "sign-in")}
         >
           {mode === "sign-in" ? "Create an account" : "Sign in"}
         </button>

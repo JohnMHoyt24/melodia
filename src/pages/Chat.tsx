@@ -1,7 +1,16 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, type ChatMessage, type ChatThreadSummary } from "../lib/api";
-import { useAuth } from "../lib/auth";
+
+const PIN_KEY = "melodia.sidebarPinned";
+
+function readPinned() {
+  try {
+    return localStorage.getItem(PIN_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
 
 type SendState = "idle" | "sending";
 type ThreadLoadState = "idle" | "loading" | "error";
@@ -9,14 +18,24 @@ type ThreadLoadState = "idle" | "loading" | "error";
 export function Chat() {
   const { threadId } = useParams<{ threadId: string }>();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-
+  
+  const [pinned, setPinned] = useState(readPinned);
   const [threads, setThreads] = useState<ChatThreadSummary[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [threadLoadState, setThreadLoadState] = useState<ThreadLoadState>("idle");
   const [prompt, setPrompt] = useState("");
   const [sendState, setSendState] = useState<SendState>("idle");
   const [error, setError] = useState<string | null>(null);
+
+  function togglePinned() {
+    const next = !pinned;
+    setPinned(next);
+    try {
+      localStorage.setItem(PIN_KEY, String(next));
+    } catch {
+      // ignore storage failures; pin state just won't persist
+    }
+  }
 
   function refreshThreads() {
     api.listThreads().then(setThreads).catch(() => undefined);
@@ -86,10 +105,25 @@ export function Chat() {
 
   return (
     <div id="chat-layout">
-      <aside id="chat-sidebar">
-        <button type="button" className="new-chat-button" onClick={() => navigate("/")}>
-          + New chat
-        </button>
+      <div className={`sidebar-slot${pinned ? " sidebar-slot--pinned" : ""}`}>
+      <aside id="chat-sidebar" className={pinned ? "pinned" : undefined}>
+        <div className="sidebar-header">
+          <button type="button" className="new-chat-button" onClick={() => navigate("/")}>
+            + New chat
+          </button>
+          <button
+            type="button"
+            className={`pin-button${pinned ? " pin-button--active" : ""}`}
+            aria-pressed={pinned}
+            aria-label={pinned ? "Unpin sidebar" : "Pin sidebar open"}
+            title={pinned ? "Unpin sidebar" : "Pin sidebar open"}
+            onClick={togglePinned}
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+              <path d="M16 3l5 5-2 1-3 3v4l-2 2-3-3-6 6-1-1 6-6-3-3 2-2h4l3-3 1-2z" />
+            </svg>
+          </button>
+        </div>
         <nav className="thread-list">
           {threads.map((thread) => (
             <div key={thread.id} className={`thread-item${thread.id === threadId ? " thread-item--active" : ""}`}>
@@ -105,13 +139,8 @@ export function Chat() {
             </div>
           ))}
         </nav>
-        <div className="sidebar-footer">
-          <span className="user-email">{user?.email}</span>
-          <button type="button" className="link-button" onClick={() => signOut()}>
-            Sign out
-          </button>
-        </div>
       </aside>
+      </div>
 
       <section id="chat-main">
         {messages.length === 0 && threadLoadState !== "loading" && (
