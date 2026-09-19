@@ -60,6 +60,27 @@ export interface Album {
 export interface ArtistDetail extends Artist {
   genres: { name: string }[];
   albums: Album[];
+  // Null until the artist has been analyzed (see analyzeArtist).
+  characteristics: Record<string, number> | null;
+}
+
+export interface SimilarArtist {
+  id: string;
+  name: string;
+  similarity: number;
+}
+
+export interface LibraryArtist {
+  id: string;
+  name: string;
+  genres: string[];
+  characteristics: Record<string, number> | null;
+  added_at: string;
+}
+
+export interface AnalysisStatus {
+  status: "done" | "queued" | "running" | "failed" | "idle";
+  error: string | null;
 }
 
 export interface RecommendedArtist {
@@ -69,11 +90,19 @@ export interface RecommendedArtist {
   reason: string;
 }
 
+export interface ChatSource {
+  id: string;
+  name: string;
+  similarity: number;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
   recommended_artists: RecommendedArtist[] | null;
+  // Library artists retrieved as context for this reply (RAG); null when none.
+  sources: ChatSource[] | null;
   created_at: string;
 }
 
@@ -98,6 +127,19 @@ export const api = {
     request<ArtistDetail>(`/artists/${artistId}/albums?limit=${limit}`, {
       method: "POST",
     }),
+  // Queue background analysis, then poll analysisStatus until "done" (or "failed").
+  requestAnalysis: (artistId: string) =>
+    request<AnalysisStatus>(`/artists/${artistId}/analysis`, { method: "POST" }),
+  analysisStatus: (artistId: string) =>
+    request<AnalysisStatus>(`/artists/${artistId}/analysis`),
+  listLibrary: () => authedRequest<LibraryArtist[]>("/library"),
+  addToLibrary: (artistId: string) =>
+    authedRequest<LibraryArtist>(`/library/${artistId}`, { method: "PUT" }),
+  removeFromLibrary: (artistId: string) =>
+    authedRequest<void>(`/library/${artistId}`, { method: "DELETE" }),
+  // Artists in the signed-in user's own library most similar to this one.
+  similarInLibrary: (artistId: string, limit = 6) =>
+    authedRequest<SimilarArtist[]>(`/library/${artistId}/similar?limit=${limit}`),
   loadTracks: (albumId: string) =>
     request<Album>(`/albums/${albumId}/tracks`, { method: "POST" }),
   listThreads: () => authedRequest<ChatThreadSummary[]>("/chat/threads"),

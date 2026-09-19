@@ -6,6 +6,7 @@ import { UserBar } from "./components/UserBar";
 import { ArtistPage } from "./pages/ArtistPage";
 import { AuthPage } from "./pages/AuthPage";
 import { Chat } from "./pages/Chat";
+import { LibraryPage } from "./pages/LibraryPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { ProfilePage } from "./pages/ProfilePage";
 
@@ -44,6 +45,14 @@ function App() {
         element={
           <RequireAuth>
             <ProfilePage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/library"
+        element={
+          <RequireAuth>
+            <LibraryPage />
           </RequireAuth>
         }
       />

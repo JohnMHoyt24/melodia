@@ -1,5 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { LibraryButton } from "../components/LibraryButton";
+import { useLibrary } from "../lib/useLibrary";
 import { api, type ChatMessage, type ChatThreadSummary } from "../lib/api";
 
 const PIN_KEY = "melodia.sidebarPinned";
@@ -19,6 +21,7 @@ export function Chat() {
   const { threadId } = useParams<{ threadId: string }>();
   const navigate = useNavigate();
   
+  const library = useLibrary();
   const [pinned, setPinned] = useState(readPinned);
   const [threads, setThreads] = useState<ChatThreadSummary[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -74,6 +77,7 @@ export function Chat() {
       role: "user",
       content: trimmed,
       recommended_artists: null,
+      sources: null,
       created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, optimisticUserMessage]);
@@ -166,9 +170,16 @@ export function Chat() {
                   <ul className="recommend-results">
                     {message.recommended_artists.map((artist) => (
                       <li key={artist.id} className="recommendation card">
-                        <Link to={`/artists/${artist.id}`} className="recommendation-name">
-                          {artist.name}
-                        </Link>
+                        <div className="recommendation-header">
+                          <Link to={`/artists/${artist.id}`} className="recommendation-name">
+                            {artist.name}
+                          </Link>
+                          <LibraryButton
+                            inLibrary={library.ids.has(artist.id)}
+                            onAdd={() => library.add(artist.id)}
+                            onRemove={() => library.remove(artist.id)}
+                          />
+                        </div>
                         {artist.genres.length > 0 && (
                           <div className="genre-tags">
                             {artist.genres.map((genre) => (
@@ -182,6 +193,23 @@ export function Chat() {
                       </li>
                     ))}
                   </ul>
+                )}
+                {message.sources && message.sources.length > 0 && (
+                  <div className="message-sources">
+                    <span className="message-sources-label">From your library</span>
+                    <ul className="source-chips">
+                      {message.sources.map((source) => (
+                        <li key={source.id}>
+                          <Link to={`/artists/${source.id}`} className="source-chip">
+                            {source.name}
+                            <span className="source-chip-match">
+                              {Math.round(source.similarity * 100)}%
+                            </span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
             ))}

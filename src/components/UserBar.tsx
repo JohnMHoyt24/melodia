@@ -71,6 +71,9 @@ export function UserBar() {
       </button>
       {open && (
         <div className="user-menu" role="menu">
+          <Link to="/library" role="menuitem" onClick={() => setOpen(false)}>
+            My library
+          </Link>
           <Link to="/profile" role="menuitem" onClick={() => setOpen(false)}>
             Edit profile
           </Link>
