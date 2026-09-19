@@ -48,6 +48,31 @@
   font-size: 1.1em;
 }
 
+.prompt-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.prompt-pill {
+  padding: 8px 14px;
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-size: 0.9em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.prompt-pill:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+}
+
 .status-line {
   margin-top: 12px;
   color: var(--text-muted);

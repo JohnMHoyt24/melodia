@@ -1,10 +1,17 @@
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { LibraryButton } from "../components/LibraryButton";
 import { useLibrary } from "../lib/useLibrary";
 import { api, type ChatMessage, type ChatThreadSummary } from "../lib/api";
 
 const PIN_KEY = "melodia.sidebarPinned";
+
+const DEFAULT_PROMPTS = [
+  "Recommend some artists I might like",
+  "Help me discover new music",
+  "Find artists similar to my library",
+  "Surprise me with something different",
+];
 
 function readPinned() {
   try {
@@ -29,6 +36,7 @@ export function Chat() {
   const [prompt, setPrompt] = useState("");
   const [sendState, setSendState] = useState<SendState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const promptRef = useRef<HTMLTextAreaElement>(null);
 
   function togglePinned() {
     const next = !pinned;
@@ -151,6 +159,21 @@ export function Chat() {
           <div className="hero">
             <h1>Melodia</h1>
             <p className="tagline">AI-powered music discovery.</p>
+            <div className="prompt-pills">
+              {DEFAULT_PROMPTS.map((text) => (
+                <button
+                  key={text}
+                  type="button"
+                  className="prompt-pill"
+                  onClick={() => {
+                    setPrompt(text);
+                    promptRef.current?.focus();
+                  }}
+                >
+                  {text}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -221,6 +244,7 @@ export function Chat() {
 
         <form onSubmit={handleSubmit} id="prompt-form" className="card">
           <textarea
+            ref={promptRef}
             placeholder="Ask for recommendations, or follow up on what you already got..."
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
