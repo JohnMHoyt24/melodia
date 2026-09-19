@@ -37,6 +37,7 @@ export function Chat() {
   const [sendState, setSendState] = useState<SendState>("idle");
   const [error, setError] = useState<string | null>(null);
   const promptRef = useRef<HTMLTextAreaElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   function togglePinned() {
     const next = !pinned;
@@ -70,6 +71,11 @@ export function Chat() {
       })
       .catch(() => setThreadLoadState("error"));
   }, [threadId]);
+
+  useEffect(() => {
+    if (messages.length === 0) return;
+    formRef.current?.scrollIntoView({ block: "end" });
+  }, [messages]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -242,7 +248,7 @@ export function Chat() {
 
         {error && <p className="feedback feedback--error">{error}</p>}
 
-        <form onSubmit={handleSubmit} id="prompt-form" className="card">
+        <form ref={formRef} onSubmit={handleSubmit} id="prompt-form" className="card">
           <textarea
             ref={promptRef}
             placeholder="Ask for recommendations, or follow up on what you already got..."
