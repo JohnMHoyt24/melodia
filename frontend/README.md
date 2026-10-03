@@ -1,32 +1,50 @@
-# React + TypeScript + Vite
+# Melodia frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Vite + React + TypeScript single-page app for Melodia. Supabase Auth handles sign-up,
+sign-in and password reset directly from the browser. Everything else goes through the
+[backend](../backend/README.md) API.
 
-Currently, two official plugins are available:
+## Requirements
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js 22+
+- The backend running locally (default http://localhost:8000)
+- The same Supabase project the backend uses
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+cd frontend
+npm install
+cp .env.example .env
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+| Variable | Value |
+| --- | --- |
+| `VITE_API_BASE_URL` | Backend URL, default `http://localhost:8000` |
+| `VITE_SUPABASE_URL` | Supabase dashboard → Settings → API → Project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase dashboard → Settings → API → anon/public key (safe to expose in the browser) |
+
+### Supabase Auth settings
+
+In the Supabase dashboard, under **Authentication → URL Configuration**:
+
+- **Site URL:** `http://localhost:5173`
+- **Redirect URLs:** add `http://localhost:5173/reset-password` so password-reset
+  emails link back to the app.
+
+## Scripts
+
+```bash
+npm run dev       # dev server at http://localhost:5173
+npm run lint      # oxlint
+npm run build     # type-check and production build into dist/
+npm run preview   # serve the production build
+```
+
+## Layout
+
+```text
+src/pages/        Route components: chat, artist, library, profile, auth, reset password
+src/components/   Shared UI (characteristic bars, similar artists, library button, user bar)
+src/lib/          API client, Supabase client, auth context, library hook
+```

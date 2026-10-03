@@ -5,7 +5,7 @@
 - Augment: render each hit's genres + characteristic scores into a context block.
 - Generate: one Gemini call that answers using only that context.
 
-Two Gemini calls per question (one embedding, one generation) - see PLAN.md for why
+Two Gemini calls per question (one embedding, one generation) - see docs/ARCHITECTURE.md for why
 call count matters on the free tier. Retrieval needs Postgres + pgvector, so like
 similarity it's verified against real Supabase rather than the SQLite suite; the tests
 stub the retrieval step.

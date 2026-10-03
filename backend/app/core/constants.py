@@ -1,5 +1,5 @@
 EMBEDDING_DIM = 768
-"""Dimensionality of artist embeddings - matches Gemini's text-embedding-004 output."""
+"""Dimensionality of artist embeddings - pinned via gemini-embedding-001's outputDimensionality."""
 
 CHARACTERISTIC_NAMES = [
     "energy",

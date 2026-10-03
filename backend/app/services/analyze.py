@@ -1,7 +1,7 @@
 """Runs Gemini classification + embedding for an already-ingested artist.
 
-Deliberately separate from app/services/ingest.py: ingestion (Milestone 2) pulls
-canonical metadata from MusicBrainz/Last.fm, analysis (Milestone 3) is the LLM step
+Deliberately separate from app/services/ingest.py: ingestion pulls
+canonical metadata from MusicBrainz/Last.fm, analysis is the LLM step
 on top of it. Keeping them apart means an artist can be re-analyzed (e.g. after a
 prompt change) without re-ingesting, and vice versa.
 """

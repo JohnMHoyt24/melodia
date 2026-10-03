@@ -1,0 +1,19 @@
+name: Feature request
+description: Suggest an idea for Melodia
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+  - type: textarea
+    id: quota
+    attributes:
+      label: Gemini usage
+      description: Would this add Gemini calls? Melodia is designed to fit within the free tier.

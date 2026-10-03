@@ -2,7 +2,7 @@
 
 Requires a real Postgres + pgvector database - `Artist.embedding.cosine_distance()`
 compiles to pgvector's `<=>` operator, which SQLite (used in the test suite) doesn't
-understand. Verified against real Supabase instead of unit-tested; see PLAN.md.
+understand. Verified against real Supabase instead of unit-tested; see docs/ARCHITECTURE.md.
 """
 
 import uuid

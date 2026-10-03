@@ -2,8 +2,8 @@
 tracks), Last.fm for user-generated tags (stored as our own `genres`).
 
 Runs synchronously on the request path for now - MusicBrainz's ~1 req/sec rate limit
-means ingesting an artist with several albums can take several seconds. Milestone 6's
-background worker is where this moves off the request path.
+means ingesting an artist with several albums can take several seconds. A background
+worker (like app/services/analysis_queue.py) is where this would move off the request path.
 """
 
 from sqlalchemy.orm import Session
@@ -80,15 +80,15 @@ def _sync_tracks(db: Session, album: Album, tracks: list[dict]) -> None:
 def ingest_artist(db: Session, name: str, album_limit: int = 10) -> Artist:
     """`album_limit=0` skips album/track ingestion entirely (only the artist search +
     Last.fm tags), cutting MusicBrainz calls for this artist from up to 1 + 2*N (N
-    albums) down to 1. Used by the recommend flow (app/services/recommend.py), where
+    albums) down to 1. Used by the chat suggestion flow (app/services/chat.py), where
     5 suggested artists at the full album_limit each meant 30-90s of sequential,
     throttled MusicBrainz calls (~1 req/sec) before anything could be shown - see
-    PLAN.md. Full ingestion still happens on demand via POST /artists/ingest.
+    docs/ARCHITECTURE.md. Full ingestion still happens on demand via POST /artists/ingest.
 
     Also skips all external calls entirely if an artist with this name is already in
     our DB and already satisfies what's being asked for (has albums, or none were
     requested) - this is what makes repeat recommendations of a popular artist across
-    different prompts fast: the "organic infinite catalog" (see PLAN.md, Milestone 4)
+    different prompts fast: the "organic infinite catalog" (see docs/ARCHITECTURE.md)
     only pays the MusicBrainz/Last.fm cost once per artist, not once per mention.
     """
     cached = db.query(Artist).filter(Artist.name.ilike(name)).one_or_none()
@@ -125,7 +125,7 @@ def ingest_album_shells(db: Session, artist: Artist, limit: int = 10) -> list[Al
     tracklist is the expensive part (one throttled call per album, the dominant cost
     in ingest_artist() above). Pair with ingest_album_tracks() per album, on demand,
     instead of blocking on every album's tracklist before showing anything - see
-    PLAN.md for the "Load albums" latency this was written to fix.
+    docs/ARCHITECTURE.md for the "Load albums" latency this was written to fix.
     """
     if not artist.musicbrainz_id:
         raise ArtistNotFound(f"{artist.name!r} has no MusicBrainz link")

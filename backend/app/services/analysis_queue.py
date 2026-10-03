@@ -5,7 +5,7 @@ free-tier quota, so it can't run inline in a request or fan out in parallel. A s
 worker thread drains a FIFO queue with a pause between jobs, which keeps us under the
 per-minute limit; gemini._post already retries the 429s that still slip through.
 
-Deliberately not Redis/RQ (PLAN.md's eventual answer): "needs analysis" is derivable
+Deliberately not Redis/RQ: "needs analysis" is derivable
 from the database (`artists.embedding IS NULL`), so nothing is lost when the process
 restarts - the artist page or the next ingest simply re-enqueues. Status here is
 in-memory only and covers queued / running / failed; done-ness comes from the DB.

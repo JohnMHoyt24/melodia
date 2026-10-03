@@ -4,7 +4,7 @@ Free tier. Used for three things:
 - `classify_characteristics`: structured-output text generation that scores an artist
   on a fixed vocabulary of characteristics (see app/core/constants.py), based on their
   name + genre tags rather than audio analysis (which Spotify no longer offers for
-  free - see PLAN.md).
+  free - see docs/ARCHITECTURE.md).
 - `chat_turn`: one structured-output call per conversational turn that both replies to
   the user and, when warranted, suggests real artists - see app/services/chat.py.
 - `embed_text`: turns a short text summary of an artist into a vector for pgvector
@@ -152,7 +152,7 @@ def chat_turn(
     Callers are expected to verify each suggested name against a real source (see
     app/services/chat.py, which uses MusicBrainz via ingest_artist) since Gemini can
     hallucinate a name that doesn't exist. Still exactly one Gemini call per turn,
-    regardless of history length - see PLAN.md for why that constraint matters on the
+    regardless of history length - see docs/ARCHITECTURE.md for why that constraint matters on the
     free tier (retrieval in app/services/rag.py adds one embedding call on top).
 
     `context` is an optional block describing analyzed library artists retrieved for

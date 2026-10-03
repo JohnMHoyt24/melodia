@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "melodia": {
+      "command": "backend/.venv/Scripts/python.exe",
+      "args": ["mcp_server.py"],
+      "cwd": "backend"
+    }
+  }
+}

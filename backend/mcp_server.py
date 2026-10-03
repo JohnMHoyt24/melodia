@@ -1,8 +1,9 @@
 """MCP server exposing Melodia's artist library to MCP clients (Claude Code, etc.).
 
-Run over stdio from the melodia-backend directory (so `.env` and `app` resolve):
+Run over stdio from the backend directory (so `.env` and `app` resolve):
 
-    .venv/Scripts/python.exe mcp_server.py
+    .venv/Scripts/python.exe mcp_server.py   # Windows
+    .venv/bin/python mcp_server.py           # macOS / Linux
 
 Every tool is a thin wrapper over the same service functions the FastAPI routes use
 (app/services/), opening its own DB session per call. stdout is the MCP transport, so
