@@ -1,5 +1,5 @@
 fastapi[standard]==0.141.1
-SQLAlchemy==2.0.53
+SQLAlchemy==2.1.2
 alembic==1.20.0
 psycopg[binary]==3.3.5
 pgvector==0.5.0
